@@ -12,7 +12,7 @@ var db *sql.DB
 // ConnectDB initializes the database connection and creates the tasks table if it doesn't exist.
 func ConnectDB() {
 	var err error
-	db, err = sql.Open("sqlite3", "./pkg/database/sqlite.db")
+	db, err = sql.Open("sqlite3", "./pkg/database/tasks.db")
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
 	}
@@ -23,7 +23,9 @@ func ConnectDB() {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT NOT NULL,
 		description TEXT,
-		status TEXT NOT NULL DEFAULT 'pending'
+		status TEXT NOT NULL DEFAULT 'pending',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);	
 	`
 	if _, err := db.Exec(createTableQuery); err != nil {

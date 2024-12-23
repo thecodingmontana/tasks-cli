@@ -4,6 +4,10 @@ github.com/inconshreveable/mousetrap
 # github.com/mattn/go-sqlite3 v1.14.24
 ## explicit; go 1.19
 github.com/mattn/go-sqlite3
+# github.com/mergestat/timediff v0.0.3
+## explicit; go 1.17
+github.com/mergestat/timediff
+github.com/mergestat/timediff/locale
 # github.com/spf13/cobra v1.8.1
 ## explicit; go 1.15
 github.com/spf13/cobra
