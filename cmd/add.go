@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/thecodingmontana/tasks-cli/pkg/database"
 )
 
 // addCmd represents the add command
@@ -26,12 +27,18 @@ var addCmd = &cobra.Command{
 			log.Fatalf("Error getting description flag: %v", descErr)
 		}
 
-		status, statusErr := cmd.Flags().GetString("status")
-		if statusErr != nil {
-			log.Fatalf("Error getting status flag: %v", statusErr)
-		}
+		// Insert task to db
+		db := database.GetDB()
+		query := `
+			INSERT INTO tasks(title, description)
+			VALUES(?, ?);
+		`
 
-		fmt.Println(title, description, status)
+		if _, err := db.Exec(query, title, description); err != nil {
+			log.Fatalf("Failed to fetch %v", err)
+			return
+		}
+		fmt.Println("Task saved successfully!")
 	},
 }
 
@@ -42,9 +49,6 @@ func init() {
 
 	// Description flag
 	addCmd.Flags().StringP("description", "d", "", "Task description.")
-
-	// Status flag
-	addCmd.Flags().StringP("status", "s", "", "Task status (pending/completed).")
 
 	rootCmd.AddCommand(addCmd)
 }

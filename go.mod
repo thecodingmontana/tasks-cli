@@ -2,7 +2,10 @@ module github.com/thecodingmontana/tasks-cli
 
 go 1.23.4
 
-require github.com/spf13/cobra v1.8.1
+require (
+	github.com/mattn/go-sqlite3 v1.14.24
+	github.com/spf13/cobra v1.8.1
+)
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
