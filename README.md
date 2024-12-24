@@ -1,6 +1,6 @@
 # tasks-cli
 
-tasks-cli is a command-line interface tool for managing tasks directly in your terminal. With tasks-cli, you can add, view, and manage tasks stored in a CSV file, and display them in a neat tabular format. The project is built using Go and the Cobra library.
+tasks-cli is a command-line interface tool for managing tasks directly in your terminal. With tasks-cli, you can add, view, and manage tasks stored in a Sqlite Database/CSV file, and display them in a neat tabular/json format. The project is built using Go and the Cobra library.
 
 ## Features
 
@@ -8,7 +8,7 @@ tasks-cli is a command-line interface tool for managing tasks directly in your t
 - **View Tasks**: Display tasks in a clear tabular format.
 - **Edit Tasks**: Update task details directly from the CLI.
 - **Delete Tasks**: Remove tasks from the CSV file.
-- **Persist Data**: All tasks are stored in a CSV file for easy management and persistence.
+- **Persist Data**: All tasks are either stored in a Sqlite DB/CSV file for easy management and persistence.
 
 ## Requirements
 
