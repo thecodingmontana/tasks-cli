@@ -3,3 +3,5 @@ pkg/database/tasks.db
 
 # Ignore tasks.csv
 pkg/database/tasks.csv
+
+./dist
