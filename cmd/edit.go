@@ -100,7 +100,45 @@ func editFromDB(id int) {
 }
 
 func editFromCSVFile(id int) {
-	fmt.Println(id)
+	records, _ := openCSVFile()
+
+	data := getDataFromCSVFile(records)
+
+	if len(data) <= 0 {
+		fmt.Printf("%v No tasks found in the CSV file\n", promptui.IconGood)
+		return
+	}
+
+	found := false
+	taskIndex := -1
+
+	for index, content := range data {
+		if content.ID == id {
+			found = true
+			taskIndex = index
+		}
+	}
+
+	if !found && taskIndex == -1 {
+		fmt.Printf("%v No task found with ID %d to edit.\n", promptui.IconGood, id)
+		return
+	}
+
+	fmt.Println(data[taskIndex])
+
+	// csvData := []DBTask{}
+
+	// taskIndex := -1
+
+	// for index, content := range data {
+	// 	if content.ID == id {
+	// 		found = true
+	// 		taskIndex = index
+	// 	}
+	// 	csvData = append(csvData, content)
+	// }
+
+	// fmt.Println(found, csvData[taskIndex])
 }
 
 func otherTasksPrompt(task DBTask) (title, description, status string) {
