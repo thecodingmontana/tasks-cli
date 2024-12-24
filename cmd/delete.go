@@ -57,6 +57,10 @@ var deleteCmd = &cobra.Command{
 func init() {
 	deleteCmd.Flags().StringP("id", "d", "", "Remove a task by its ID")
 	deleteCmd.MarkFlagRequired("id")
+
+	deleteCmd.RegisterFlagCompletionFunc("id", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"1"}, cobra.ShellCompDirectiveNoFileComp
+	})
 	rootCmd.AddCommand(deleteCmd)
 }
 

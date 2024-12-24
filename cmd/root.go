@@ -41,4 +41,37 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.AddCommand(completionCmd)
+}
+
+var completionCmd = &cobra.Command{
+	Use:   "completion [bash|zsh|fish|powershell]",
+	Short: "Generate completion script",
+	Long: `To load completions:
+
+Bash:
+  $ source <(tasks-cli completion bash)
+
+Zsh:
+  $ source <(tasks-cli completion zsh)
+
+Fish:
+  $ tasks-cli completion fish | source
+
+PowerShell:
+  PS> tasks-cli completion powershell | Out-String | Invoke-Expression
+`,
+	ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
+	Run: func(cmd *cobra.Command, args []string) {
+		switch args[0] {
+		case "bash":
+			cmd.Root().GenBashCompletion(os.Stdout)
+		case "zsh":
+			cmd.Root().GenZshCompletion(os.Stdout)
+		case "fish":
+			cmd.Root().GenFishCompletion(os.Stdout, true)
+		case "powershell":
+			cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+		}
+	},
 }
