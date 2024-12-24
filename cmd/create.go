@@ -5,8 +5,11 @@ package cmd
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -28,7 +31,7 @@ var createCmd = &cobra.Command{
 			fmt.Printf("%s Task title: %s\n", promptui.IconGood, title)
 		} else {
 			prompt := promptui.Prompt{
-				Label: fmt.Sprintf("%s Task title", promptui.IconInitial),
+				Label: fmt.Sprintf("%s Task title: ", promptui.IconInitial),
 				Validate: func(input string) error {
 					if len(input) == 0 {
 						return fmt.Errorf("project title cannot be empty")
@@ -47,7 +50,7 @@ var createCmd = &cobra.Command{
 		}
 
 		descriptionPrompt := promptui.Prompt{
-			Label: fmt.Sprintf("%s Task description", promptui.IconInitial),
+			Label: fmt.Sprintf("%s Task description (optional): ", promptui.IconInitial),
 		}
 
 		descriptionText, err := descriptionPrompt.Run()
@@ -73,14 +76,17 @@ var createCmd = &cobra.Command{
 
 		switch saveOption {
 		case "CSV File":
-			fmt.Println("Coming Soon!")
+			saveToCSVFile(Task{
+				Title:       title,
+				Description: description,
+			})
 		default:
 			saveToSqliteDB(db, Task{
 				Title:       title,
 				Description: description,
 			})
 		}
-		fmt.Printf("%s Task created successfully!", promptui.IconGood)
+		fmt.Printf("%s Task created successfully!\n", promptui.IconGood)
 	},
 }
 
@@ -102,4 +108,62 @@ func saveToSqliteDB(db *sql.DB, task Task) {
 		fmt.Printf("Failed to create the task: %v", taskCreateErr)
 		os.Exit(1)
 	}
+}
+
+func saveToCSVFile(task Task) {
+	// Open CSV File in append mode create if doesn't exists
+	file, err := os.OpenFile("./pkg/database/tasks.csv", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
+
+	if err != nil {
+		fmt.Printf("Failed to create/open CSV file: %v", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	// check if CSV file is empty to write headers
+	stat, statErr := file.Stat()
+
+	if statErr != nil {
+		fmt.Printf("Cannot get file info: %v", statErr)
+	}
+
+	nextId := 1
+	if stat.Size() <= 0 {
+		// File empty write headers.
+		writer := csv.NewWriter(file)
+		csvHeaders := []string{"ID", "TITLE", "DESCRIPTION", "STATUS", "CREATED AT", "UPDATED AT"}
+
+		if errCSVHeaders := writer.Write(csvHeaders); errCSVHeaders != nil {
+			fmt.Printf("Failed to write headers for the CSV File: %v", errCSVHeaders)
+			os.Exit(1)
+		}
+		writer.Flush()
+	} else {
+		// Read CSV File
+		reader := csv.NewReader(file)
+		records, errRecords := reader.ReadAll()
+
+		if errRecords != nil {
+			fmt.Printf("Error loading CSV File records: %v", errRecords)
+			os.Exit(1)
+		}
+
+		if len(records) > 0 {
+			lastRecord := records[len(records)-1]
+			lastIndex, errLastIndex := strconv.Atoi(lastRecord[0])
+
+			if errLastIndex != nil {
+				fmt.Printf("Failed to parse the last record index: %v", errLastIndex)
+				os.Exit(1)
+			}
+			nextId = lastIndex + 1
+		}
+	}
+
+	newRecord := append([]string{strconv.Itoa(nextId)}, task.Title, task.Description, "pending", time.Now().UTC().String(), time.Now().UTC().String())
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	writer.Write(newRecord)
 }
