@@ -148,8 +148,10 @@ func saveToCSVFile(task Task) {
 			os.Exit(1)
 		}
 
-		if len(records) > 0 {
-			lastRecord := records[len(records)-1]
+		// Filter headers first
+		csvRecords := records[1:]
+		if len(csvRecords) > 0 {
+			lastRecord := csvRecords[len(records)-1]
 			lastIndex, errLastIndex := strconv.Atoi(lastRecord[0])
 
 			if errLastIndex != nil {
