@@ -44,6 +44,7 @@ var listCmd = &cobra.Command{
 
 		if formatErr != nil {
 			fmt.Printf("Failed to get format flag: %v", formatErr)
+			os.Exit(1)
 		}
 
 		switch listChoice {
@@ -206,7 +207,7 @@ func getDataFromCSVFile(csvData [][]string) []DBTask {
 	// skip headers
 	restOfContent := csvData[1:]
 	for _, content := range restOfContent {
-		if len(content) < 7 {
+		if len(content) >= 6 {
 			var id int
 
 			id, errInnerId := strconv.Atoi(content[0])
