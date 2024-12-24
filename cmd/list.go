@@ -6,6 +6,7 @@ package cmd
 import (
 	"database/sql"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -74,11 +75,11 @@ func listFromDatabase(format string) {
 	}
 	defer rows.Close()
 
+	data := getRowData(rows)
 	switch format {
 	case "json":
-
+		formatInJSON(data)
 	default:
-		data := getRowData(rows)
 		formatInTable(data)
 	}
 }
@@ -101,11 +102,11 @@ func listFromCSVFile(format string) {
 		os.Exit(1)
 	}
 
+	data := getDataFromCSVFile(records)
 	switch format {
 	case "json":
-
+		formatInJSON(data)
 	default:
-		data := getDataFromCSVFile(records)
 		formatInTable(data)
 	}
 }
@@ -136,13 +137,23 @@ func formatInTable(data []DBTask) {
 	w.Flush()
 }
 
+func formatInJSON(data []DBTask) {
+	jsonData, err := json.MarshalIndent(data, "", " ")
+
+	if err != nil {
+		fmt.Printf("Failed to change data to JSON: %v", err)
+		os.Exit(1)
+	}
+	fmt.Println(string(jsonData))
+}
+
 type DBTask struct {
-	ID          int
-	Title       string
-	Description string
-	Status      string
-	CreatedAt   string
-	UpdatedAt   string
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
 }
 
 func getRowData(rows *sql.Rows) []DBTask {
