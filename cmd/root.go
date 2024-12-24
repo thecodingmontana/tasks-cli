@@ -53,7 +53,7 @@ Bash:
   $ source <(tasks-cli completion bash)
 
 Zsh:
-  $ source <(tasks-cli completion zsh)
+  $ tasks-cli completion zsh > "${fpath[1]}/_tasks-cli"
 
 Fish:
   $ tasks-cli completion fish | source
