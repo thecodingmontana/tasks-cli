@@ -5,9 +5,10 @@ package cmd
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -46,7 +47,7 @@ var listCmd = &cobra.Command{
 
 		switch listChoice {
 		case "CSV File":
-			listFromCSVFile(cmd, args)
+			listFromCSVFile(format)
 		default:
 			listFromDatabase(format)
 		}
@@ -68,7 +69,8 @@ func listFromDatabase(format string) {
 	rows, listAllErr := db.Query(listAllQuery)
 
 	if listAllErr != nil {
-		log.Fatalf("Failed to fetch all tasks: %v", listAllErr)
+		fmt.Printf("Failed to fetch all tasks: %v", listAllErr)
+		os.Exit(1)
 	}
 	defer rows.Close()
 
@@ -81,9 +83,31 @@ func listFromDatabase(format string) {
 	}
 }
 
-func listFromCSVFile(cmd *cobra.Command, args []string) {
-	// Read CSV File Data
+func listFromCSVFile(format string) {
+	// Open CSV File
+	file, fileErr := os.OpenFile("./pkg/database/tasks.csv", os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
 
+	if fileErr != nil {
+		fmt.Printf("Failed to open CSV File: %v", fileErr)
+	}
+	defer file.Close()
+
+	// Read CSV File
+	reader := csv.NewReader(file)
+	records, errRecords := reader.ReadAll()
+
+	if errRecords != nil {
+		fmt.Printf("Error loading CSV File records: %v", errRecords)
+		os.Exit(1)
+	}
+
+	switch format {
+	case "json":
+
+	default:
+		data := getDataFromCSVFile(records)
+		formatInTable(data)
+	}
 }
 
 func formatInTable(data []DBTask) {
@@ -129,20 +153,20 @@ func getRowData(rows *sql.Rows) []DBTask {
 
 		err := rows.Scan(&id, &title, &description, &status, &created_at, &updated_at)
 		if err != nil {
-			log.Printf("Error scanning row: %v", err)
-			continue
+			fmt.Printf("Error scanning row: %v", err)
+			os.Exit(1)
 		}
 
 		parsedCreatedDate, err := time.Parse("2006-01-02T15:04:05Z", created_at)
 		if err != nil {
-			log.Printf("Error parsing created_at: %v", err)
-			continue
+			fmt.Printf("Error parsing created_at: %v", err)
+			os.Exit(1)
 		}
 
 		parsedUpdatedDate, err := time.Parse("2006-01-02T15:04:05Z", updated_at)
 		if err != nil {
-			log.Printf("Error parsing updated_at: %v", err)
-			continue
+			fmt.Printf("Error parsing updated_at: %v", err)
+			os.Exit(1)
 		}
 
 		if len(title) > 20 {
@@ -163,5 +187,45 @@ func getRowData(rows *sql.Rows) []DBTask {
 
 		tasks = append(tasks, task)
 	}
+	return tasks
+}
+
+func getDataFromCSVFile(csvData [][]string) []DBTask {
+	tasks := make([]DBTask, 0)
+	// skip headers
+	restOfContent := csvData[1:]
+	for _, content := range restOfContent {
+		if len(content) < 7 {
+			var id int
+
+			id, errInnerId := strconv.Atoi(content[0])
+			if errInnerId != nil {
+				fmt.Printf("Failed to parse the ID: %v", errInnerId)
+				break
+			}
+			parsedCreatedDate, err := time.Parse("2006-01-02 15:04:05.999999999 +0000 UTC", content[4])
+			if err != nil {
+				fmt.Printf("Error parsing created_at: %v", err)
+				os.Exit(1)
+			}
+
+			parsedUpdatedDate, err := time.Parse("2006-01-02 15:04:05.999999999 +0000 UTC", content[5])
+			if err != nil {
+				fmt.Printf("Error parsing updated_at: %v", err)
+				os.Exit(1)
+			}
+			task := DBTask{
+				ID:          id,
+				Title:       content[1],
+				Description: content[2],
+				Status:      content[3],
+				CreatedAt:   timediff.TimeDiff(parsedCreatedDate),
+				UpdatedAt:   timediff.TimeDiff(parsedUpdatedDate),
+			}
+
+			tasks = append(tasks, task)
+		}
+	}
+
 	return tasks
 }
