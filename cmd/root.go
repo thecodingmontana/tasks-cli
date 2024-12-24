@@ -13,7 +13,7 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "tasks-cli",
-	Short: "A CLI tool for managing tasks in a CSV file.",
+	Short: "A CLI tool for managing tasks in a Database (sqlite)/CSV file.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		database.ConnectDB() // Initialize the database
 	},
