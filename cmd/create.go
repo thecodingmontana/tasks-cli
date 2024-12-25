@@ -138,7 +138,7 @@ func saveToCSVFile(task Task) error {
 		return err
 	}
 
-	timestamp := time.Now().UTC().Format(time.RFC3339)
+	timestamp := time.Now().UTC().String()
 	newRecord := []string{
 		strconv.Itoa(nextID),
 		task.Title,

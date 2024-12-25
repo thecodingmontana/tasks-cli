@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/manifoldco/promptui"
@@ -131,12 +132,17 @@ func editFromCSVFile(id int) {
 	title, description, status := otherTasksPrompt(taskToBeUpdated)
 	if title != data[taskIndex].Title || description != data[taskIndex].Description || status != data[taskIndex].Status {
 		updated_at := time.Now().UTC().String()
+		created_at, changeErr := TimeDiffToUTC("2 hours ago")
+		if changeErr != nil {
+			fmt.Printf("%v Failed to change created_at to UTC Time: %v\n", promptui.IconGood, changeErr)
+			return
+		}
 		data[taskIndex] = DBTask{
 			ID:          data[taskIndex].ID,
 			Title:       title,
 			Description: description,
 			Status:      data[taskIndex].Status,
-			CreatedAt:   data[taskIndex].CreatedAt,
+			CreatedAt:   created_at,
 			UpdatedAt:   updated_at,
 		}
 	}
@@ -146,13 +152,25 @@ func editFromCSVFile(id int) {
 	// Add headers
 	newRecords = append(newRecords, []string{"ID", "TITLE", "DESCRIPTION", "STATUS", "CREATED AT", "UPDATED AT"})
 	for _, task := range data {
+		created_at, changeErr := TimeDiffToUTC("2 hours ago")
+		if changeErr != nil {
+			fmt.Printf("%v Failed to change created_at to UTC Time: %v\n", promptui.IconGood, changeErr)
+			return
+		}
+
+		updated_at, updatedErr := TimeDiffToUTC("2 hours ago")
+		if updatedErr != nil {
+			fmt.Printf("%v Failed to change created_at to UTC Time: %v\n", promptui.IconGood, updatedErr)
+			return
+		}
+
 		record := []string{
 			strconv.Itoa(task.ID),
 			task.Title,
 			task.Description,
 			task.Status,
-			task.CreatedAt,
-			task.UpdatedAt,
+			created_at,
+			updated_at,
 		}
 		newRecords = append(newRecords, record)
 	}
@@ -214,4 +232,31 @@ func otherTasksPrompt(task DBTask) (title, description, status string) {
 		os.Exit(1)
 	}
 	return title, description, status
+}
+
+func TimeDiffToUTC(timeDiff string) (string, error) {
+	now := time.Now()
+
+	// Parse the relative time description
+	if strings.Contains(timeDiff, "just now") {
+		return now.UTC().Format("2006-01-02 15:04:05.999999999 +0000 UTC"), nil
+	}
+
+	var duration time.Duration
+	if strings.Contains(timeDiff, "minute") {
+		minutes := 1
+		fmt.Sscanf(timeDiff, "%d minutes ago", &minutes)
+		duration = time.Duration(-minutes) * time.Minute
+	} else if strings.Contains(timeDiff, "hour") {
+		hours := 1
+		fmt.Sscanf(timeDiff, "%d hours ago", &hours)
+		duration = time.Duration(-hours) * time.Hour
+	} else if strings.Contains(timeDiff, "day") {
+		days := 1
+		fmt.Sscanf(timeDiff, "%d days ago", &days)
+		duration = time.Duration(-days) * 24 * time.Hour
+	}
+
+	targetTime := now.Add(duration)
+	return targetTime.UTC().Format("2006-01-02 15:04:05.999999999 +0000 UTC"), nil
 }
