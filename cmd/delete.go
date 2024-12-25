@@ -93,6 +93,7 @@ func deleteFromDB(id int) {
 
 func deleteFromCSVFile(id int) {
 	records, file := openCSVFile()
+	defer file.Close()
 
 	data := getDataFromCSVFile(records)
 
@@ -135,11 +136,11 @@ func deleteFromCSVFile(id int) {
 
 	// Truncate the file and write from beginning
 	if err := file.Truncate(0); err != nil {
-		fmt.Printf("%v Error truncating file: %v", promptui.IconBad, err)
+		fmt.Printf("%v Error truncating file: %v\n", promptui.IconBad, err)
 		return
 	}
 	if _, err := file.Seek(0, 0); err != nil {
-		fmt.Printf("%v Error seeking file: %v", promptui.IconBad, err)
+		fmt.Printf("%v Error seeking file: %v\n", promptui.IconBad, err)
 		return
 	}
 
@@ -148,7 +149,7 @@ func deleteFromCSVFile(id int) {
 	defer writer.Flush()
 
 	if err := writer.WriteAll(newRecords); err != nil {
-		fmt.Printf("%v Error writing to CSV: %v", promptui.IconBad, err)
+		fmt.Printf("%v Error writing to CSV: %v\n", promptui.IconBad, err)
 		return
 	}
 
@@ -160,16 +161,15 @@ func openCSVFile() (records [][]string, file *os.File) {
 	// Open file with read and write permissions
 	file, fileErr := os.OpenFile("./pkg/database/tasks.csv", os.O_RDWR|os.O_CREATE, 0644)
 	if fileErr != nil {
-		fmt.Printf("%v Failed to create/open CSV file: %v", promptui.IconBad, fileErr)
+		fmt.Printf("%v Failed to create/open CSV file: %v\n", promptui.IconBad, fileErr)
 		os.Exit(1)
 	}
-	defer file.Close()
 
 	// Read CSV File
 	reader := csv.NewReader(file)
 	records, errRecords := reader.ReadAll()
 	if errRecords != nil {
-		fmt.Printf("%v Error loading CSV File records: %v", promptui.IconBad, errRecords)
+		fmt.Printf("%v Error loading CSV File records: %v\n", promptui.IconBad, errRecords)
 		os.Exit(1)
 	}
 	return

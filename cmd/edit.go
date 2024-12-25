@@ -5,9 +5,11 @@ package cmd
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -100,7 +102,8 @@ func editFromDB(id int) {
 }
 
 func editFromCSVFile(id int) {
-	records, _ := openCSVFile()
+	records, file := openCSVFile()
+	defer file.Close()
 
 	data := getDataFromCSVFile(records)
 
@@ -126,8 +129,55 @@ func editFromCSVFile(id int) {
 
 	taskToBeUpdated := data[taskIndex]
 	title, description, status := otherTasksPrompt(taskToBeUpdated)
+	if title != data[taskIndex].Title || description != data[taskIndex].Description || status != data[taskIndex].Status {
+		updated_at := time.Now().UTC().String()
+		data[taskIndex] = DBTask{
+			ID:          data[taskIndex].ID,
+			Title:       title,
+			Description: description,
+			Status:      data[taskIndex].Status,
+			CreatedAt:   data[taskIndex].CreatedAt,
+			UpdatedAt:   updated_at,
+		}
+	}
 
-	fmt.Println(title, description, status)
+	// Convert tasks back to CSV records
+	var newRecords [][]string
+	// Add headers
+	newRecords = append(newRecords, []string{"ID", "TITLE", "DESCRIPTION", "STATUS", "CREATED AT", "UPDATED AT"})
+	for _, task := range data {
+		record := []string{
+			strconv.Itoa(task.ID),
+			task.Title,
+			task.Description,
+			task.Status,
+			task.CreatedAt,
+			task.UpdatedAt,
+		}
+		newRecords = append(newRecords, record)
+	}
+
+	// Truncate the file and write from beginning
+	if err := file.Truncate(0); err != nil {
+		fmt.Printf("%v Error truncating file: %v", promptui.IconBad, err)
+		return
+	}
+	if _, err := file.Seek(0, 0); err != nil {
+		fmt.Printf("%v Error seeking file: %v", promptui.IconBad, err)
+		return
+	}
+
+	// Write the updated records
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	if err := writer.WriteAll(newRecords); err != nil {
+		fmt.Printf("%v Error writing to CSV: %v", promptui.IconBad, err)
+		return
+	}
+
+	fmt.Printf("%v Task with ID %d edited successfully.\n", promptui.IconGood, id)
+	fmt.Printf("%v CSV Data updated\n", promptui.IconGood)
 }
 
 func otherTasksPrompt(task DBTask) (title, description, status string) {
