@@ -19,15 +19,15 @@ func ConnectDB() {
 
 	// Create tasks table if not exists
 	createTableQuery := `
-	CREATE TABLE IF NOT EXISTS tasks (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		title TEXT NOT NULL,
-		description TEXT,
-		status TEXT NOT NULL DEFAULT 'pending',
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);	
-	`
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at DATETIME DEFAULT (DATETIME('now')),
+            updated_at DATETIME DEFAULT (DATETIME('now'))
+        );
+    `
 	if _, err := db.Exec(createTableQuery); err != nil {
 		log.Fatalf("Error creating table: %v", err)
 	}

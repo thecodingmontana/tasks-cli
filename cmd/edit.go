@@ -87,7 +87,7 @@ func editFromDB(id int) {
 
 	updateQuery := `
 		UPDATE tasks
-		SET title=?, description=?, status=?
+		SET title=?, description=?, status=?, updated_at=DATETIME('now')
 		WHERE id=?
 	`
 	if _, updateErr := db.Exec(updateQuery, title, description, status, id); updateErr != nil {
@@ -124,21 +124,10 @@ func editFromCSVFile(id int) {
 		return
 	}
 
-	fmt.Println(data[taskIndex])
+	taskToBeUpdated := data[taskIndex]
+	title, description, status := otherTasksPrompt(taskToBeUpdated)
 
-	// csvData := []DBTask{}
-
-	// taskIndex := -1
-
-	// for index, content := range data {
-	// 	if content.ID == id {
-	// 		found = true
-	// 		taskIndex = index
-	// 	}
-	// 	csvData = append(csvData, content)
-	// }
-
-	// fmt.Println(found, csvData[taskIndex])
+	fmt.Println(title, description, status)
 }
 
 func otherTasksPrompt(task DBTask) (title, description, status string) {
