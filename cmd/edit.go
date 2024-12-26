@@ -132,7 +132,7 @@ func editFromCSVFile(id int) {
 	title, description, status := otherTasksPrompt(taskToBeUpdated)
 	if title != data[taskIndex].Title || description != data[taskIndex].Description || status != data[taskIndex].Status {
 		updated_at := time.Now().UTC().String()
-		created_at, changeErr := TimeDiffToUTC("2 hours ago")
+		created_at, changeErr := TimeDiffToUTC(data[taskIndex].CreatedAt)
 		if changeErr != nil {
 			fmt.Printf("%v Failed to change created_at to UTC Time: %v\n", promptui.IconGood, changeErr)
 			return
@@ -141,10 +141,11 @@ func editFromCSVFile(id int) {
 			ID:          data[taskIndex].ID,
 			Title:       title,
 			Description: description,
-			Status:      data[taskIndex].Status,
+			Status:      status,
 			CreatedAt:   created_at,
 			UpdatedAt:   updated_at,
 		}
+		fmt.Println(data)
 	}
 
 	// Convert tasks back to CSV records
@@ -152,13 +153,13 @@ func editFromCSVFile(id int) {
 	// Add headers
 	newRecords = append(newRecords, []string{"ID", "TITLE", "DESCRIPTION", "STATUS", "CREATED AT", "UPDATED AT"})
 	for _, task := range data {
-		created_at, changeErr := TimeDiffToUTC("2 hours ago")
+		created_at, changeErr := TimeDiffToUTC(task.CreatedAt)
 		if changeErr != nil {
 			fmt.Printf("%v Failed to change created_at to UTC Time: %v\n", promptui.IconGood, changeErr)
 			return
 		}
 
-		updated_at, updatedErr := TimeDiffToUTC("2 hours ago")
+		updated_at, updatedErr := TimeDiffToUTC(task.UpdatedAt)
 		if updatedErr != nil {
 			fmt.Printf("%v Failed to change created_at to UTC Time: %v\n", promptui.IconGood, updatedErr)
 			return
